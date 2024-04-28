@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link
+        rel="stylesheet"
+        href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        />
+    </head>
+    <style>
+        #header{
+            display: grid;
+            justify-items: center;
+            padding: 30px;
+            margin-bottom: 20px;
+            margin-top: 20px;
+        }
+        .add-employee{
+            display: grid;
+            padding-top: 30px;
+            justify-content: center;
+            align-content: center;
+            background-color: rgb(247, 247, 247);
+            border-radius: 10px;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* พื้นหลังดำอ่อน */
+            display: none; /* ซ่อนเมื่อเริ่มต้น */
+            justify-content: center;
+            align-items: center;
+        }
+                /* การจัดรูปแบบตัว Pop-up */
+        .popup {
+            background-color: #fff; /* สีขาว */
+            padding: 20px; /* ระยะขอบ */
+            border-radius: 10px; /* ขอบโค้ง */
+            position: relative; /* สำหรับตำแหน่งปุ่มปิด */
+            text-align: center;
+        }
+        /* การจัดรูปแบบปุ่มปิด */
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer; /* เปลี่ยนเคอร์เซอร์เมื่อชี้ */
+            font-size: 18px; /* ขนาดตัวอักษร */
+        }
+    </style>
+<body>
+    <div class="container">
+
+        <H3 id="header">รายชื่อพนักงาน</H3>
+
+        <div class="add-employee" class="well">
+            <form action="/add-data" method="post" class="form-group">
+                <div class="top">
+                    <label for="fname">ชื่อ</label>
+                    <input type="text" name="fname">
+        
+                    <label for="lname">นามสกุล</label>
+                    <input type="text" name="lname">
+        
+                    <label for="sex">เพศ</label>
+                        <select name="sex" id="sex">
+                        <option value="Male">ชาย</option>
+                        <option value="female">หญิง</option>
+                        <option value="none">ไม่ระบุ</option>
+                    </select>
+                </div>
+                <div class="bottom">
+                    <label for="address">ที่อยู่</label>
+                    <input type="text" name="address">
+
+                    <label for="gmail">อีเมล</label>
+                    <input type="text" name="gmail">
+        
+                    <label for="degree">ระดับการศึกษา</label>
+                    <input type="text" name="degree">
+                    <button type="submit" type="button" class="btn btn-success">เพิ่ม</button>
+                </div>
+            </form>
+        </div>
+        <table class="table table-striped">
+            <thead>
+                <th>อันดับ</th>
+                <th>ชื่อ</th>
+                <th>นามสกุล</th>
+                <th>เพศ</th>
+                <th>อีเมล</th>
+                <th>ระดับการศึกษา</th>
+                <th></th>
+            </thead>
+            <tbody>
+                <% result.forEach(user => {%>
+                    <tr id="<%=user.user_id%>">
+                        <td class="No"></td>
+                        <td><%=user.user_fname%></td>
+                        <td><%=user.user_lname%></td>
+                        <td><%=user.user_sex%></td>
+                        <td><%=user.user_mail%></td>
+                        <td><%=user.user_enducation%></td>
+                        <td class="button-all">
+                            <button type="button" class="openPopupedit btn btn-warning" edit-id="<%=user.user_id%>">แก้ไข</button>
+                            <button type="button" class="openPopupDelete btn btn-danger" delete-id="<%=user.user_id%>"">ลบ</button>
+                        </td>
+                    </tr>
+                <%});%>        
+            </tbody>
+        </table>
+
+        <!-- ส่วนของ Pop-up -->
+        <div class="overlay" id="popupOverlay">
+            <div class="popup" id="In-popup">
+                <span class="close-btn" id="closePopup">×</span> <!-- ปุ่มปิด -->
+            </div>
+        </div>
+
+    </div>
+    <script>
+        // JavaScript สำหรับการเปิด/ปิด Pop-up
+        const openButtons = document.querySelectorAll('.openPopupedit'); //ปุ่มแก้ไข
+        const openButtonsDelete = document.querySelectorAll('.openPopupDelete'); //ปุ่มลบ
+
+        const closeButton = document.getElementById('closePopup');
+        const popupOverlay = document.getElementById('popupOverlay');
+        const InPopup = document.getElementById('In-popup');
+
+        function numberItem(){
+            const number = document.querySelectorAll('.No');
+            for (let index = 0; index < number.length; index++) {
+                const element = number[index];
+                element.textContent = index
+            }
+        }
+
+        function EditData(){
+            openButtons.forEach(button => { // วนลูปเพื่อเพิ่ม event listener สำหรับแต่ละปุ่ม
+            button.addEventListener('click', () => {
+                popupOverlay.style.display = 'flex'; 
+
+                const FindId = button.getAttribute('edit-id');
+                
+                const data = document.getElementById(`${FindId}`);
+                const tds = data.querySelectorAll("td"); // ดึงทุก td ในแถว
+                InPopup.innerHTML = `
+                <h3>แก้ไขข้อมูล</h3>            
+                <form action="/edit-data" method="post" >
+                <div class="top">
+                    <label for="fname">ชื่อ</label>
+                    <input type="text" name="fname" value="${tds[1].innerText}">
+        
+                    <label for="lname">นามสกุล</label>
+                    <input type="text" name="lname" value="${tds[2].innerText}">
+        
+                    <label for="sex">เพศ</label>
+                        <select name="sex" id="sex" >
+                        <option value="Male">ชาย</option>
+                        <option value="female">หญิง</option>
+                        <option value="none">ไม่ระบุ</option>
+                    </select>
+                </div>
+                <div class="bottom">
+                    <label for="gmail">อีเมล</label>
+                    <input type="text" name="gmail" value="${tds[4].innerText}">
+        
+                    <label for="degree">ระดับการศึกษา</label>
+                    <input type="text" name="degree" value="${tds[5].innerText}">
+
+                    <button type="submit" type="button" class="btn btn-warning">แก้ไข</button>
+
+                    <input type="hidden" name="EmtId" value="${FindId}">
+
+                </div>
+            </form>`
+            });
+        });
+        }
+
+        function DeleteData(){
+            openButtonsDelete.forEach(button => { // วนลูปเพื่อเพิ่ม event listener สำหรับแต่ละปุ่ม
+                button.addEventListener('click', () => {
+                    popupOverlay.style.display = 'flex'; 
+                    const FindId = button.getAttribute('delete-id');
+                    const data = document.getElementById(`${FindId}`);
+
+                    InPopup.innerHTML = `
+                    <h3>คุณยืนยันที่จะลบข้อมูลนี้หรือไม่ ?</h3>
+                    <form action="/delete-data" method="post" >
+                        <input type="hidden" name="EmtId" value="${FindId}">
+                        <button type="submit" type="button" class="btn btn-danger">ยืนยัน</button>
+                    </form>
+                    `
+                });
+            })
+        }
+
+        // เมื่อคลิกปุ่มปิด ปิด Pop-up
+        closeButton.addEventListener('click', () => {
+            popupOverlay.style.display = 'none'; // ซ่อน Pop-up
+        });
+    
+        // ปิด Pop-up เมื่อคลิกที่พื้นหลัง
+        popupOverlay.addEventListener('click', (event) => {
+            if (event.target === popupOverlay) {
+                popupOverlay.style.display = 'none'; // ซ่อน Pop-up
+            }
+        });
+
+        numberItem();
+        EditData();
+        DeleteData();
+
+    </script>
+</body>
+</html>
